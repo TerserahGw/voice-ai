@@ -38,10 +38,12 @@ def index():
 def fetch_voice_route():
     text = request.form['text']
     voice_data = fetch_voice(text)
-    with open('output.mp3', 'wb') as f:
-        f.write(voice_data)
-    return send_file('output.mp3', as_attachment=True, download_name='output.mp3')
-
+    return send_file(
+        io.BytesIO(voice_data),
+        mimetype='audio/mpeg',
+        as_attachment=True,
+        download_name='output.mp3'
+    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
