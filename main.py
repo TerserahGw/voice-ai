@@ -1,3 +1,4 @@
+import io
 from flask import Flask, request, send_file, render_template_string
 import requests
 from deep_translator import GoogleTranslator
@@ -34,16 +35,21 @@ def index():
     </html>
     ''')
 
-@app.route('/hutao', methods=['POST'])
+@app.route('/hutao', methods=['GET'])
 def fetch_voice_route():
-    text = request.form['text']
-    voice_data = fetch_voice(text)
-    return send_file(
-        io.BytesIO(voice_data),
-        mimetype='audio/mpeg',
-        as_attachment=True,
-        download_name='output.mp3'
-    )
+    text = request.args.get('text')
+    if text:
+        voice_data = fetch_voice(text)
+        voice_bytes_io = io.BytesIO(voice_data)
+        voice_bytes_io.seek(0)
+        return send_file(
+            voice_bytes_io,
+            mimetype='audio/mpeg',
+            as_attachment=True,
+            download_name='output.mp3'
+        )
+    else:
+        return "Text parameter is missing.", 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
