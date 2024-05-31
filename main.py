@@ -1,45 +1,43 @@
 import io
-from flask import Flask, request, send_file, render_template_string
+from flask import Flask, request, send_file
 import requests
 from deep_translator import GoogleTranslator
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 
-def fetch_voice(text, id=176, format='mp3', lang='ja'):
+def fetch_voice(text, id, lang='ja', format='mp3', length=1, noise=0.25, noisew=0.4, max=75, streaming='true'):
     translated_text = GoogleTranslator(source='auto', target=lang).translate(text)
-    api_url = f'https://keilasenpai-smple-api.hf.space/voice/vits?text={translated_text}&id={id}&format={format}&lang={lang}'
+    api_url = (
+        f'https://artrajz-vits-simple-api.hf.space/voice/vits?text={translated_text}&id={id}&format={format}&lang={lang}'
+        f'&length={length}&noise={noise}&noisew={noisew}&max={max}&streaming={streaming}'
+    )
     response = requests.get(api_url)
     if response.status_code == 200:
         return response.content
     else:
         response.raise_for_status()
 
-@app.route('/')
-def index():
-    return render_template_string('''
-    <!doctype html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Text to Voice</title>
-    </head>
-    <body>
-      <h1>Text to Voice Converter</h1>
-      <form action="/hutao" method="post">
-        <label for="text">Enter text:</label><br><br>
-        <textarea id="text" name="text" rows="4" cols="50"></textarea><br><br>
-        <input type="submit" value="Submit">
-      </form>
-    </body>
-    </html>
-    ''')
-
 @app.route('/hutao', methods=['GET'])
-def fetch_voice_route():
+def fetch_hutao_voice_route():
     text = request.args.get('text')
     if text:
-        voice_data = fetch_voice(text)
+        voice_data = fetch_voice(text, id=176)
+        voice_bytes_io = io.BytesIO(voice_data)
+        voice_bytes_io.seek(0)
+        return send_file(
+            voice_bytes_io,
+            mimetype='audio/mpeg',
+            as_attachment=True,
+            download_name='output.mp3'
+        )
+    else:
+        return "Text parameter is missing.", 400
+
+@app.route('/raiden', methods=['GET'])
+def fetch_raiden_voice_route():
+    text = request.args.get('text')
+    if text:
+        voice_data = fetch_voice(text, id=182)
         voice_bytes_io = io.BytesIO(voice_data)
         voice_bytes_io.seek(0)
         return send_file(
