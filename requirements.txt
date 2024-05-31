@@ -1,5 +1,5 @@
 Flask
 typing_extensions
-websocketsFlask==2.0.2
+websockets
 deep-translator==1.5.4
 requests==2.26.0
